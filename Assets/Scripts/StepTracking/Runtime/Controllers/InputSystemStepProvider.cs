@@ -44,7 +44,7 @@ namespace GimGim.StepTracking {
 
         public bool IsTracking => _isTracking;
 
-        public int GetSessionSteps => _sessionSteps;
+        public int GetSessionSteps() => _sessionSteps;
 
         #endregion
 
