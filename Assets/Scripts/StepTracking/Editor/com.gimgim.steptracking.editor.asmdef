@@ -1,0 +1,16 @@
+{
+    "name": "com.gimgim.steptracking.editor",
+    "rootNamespace": "GimGim.StepTracking.Editor",
+    "references": [
+        "GUID:d71c13b7689cfb04ba9671daad819ad8"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

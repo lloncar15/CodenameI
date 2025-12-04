@@ -1,0 +1,16 @@
+{
+    "name": "GimGim",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a485644cc3f145e43a5144a50fc394b8"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
