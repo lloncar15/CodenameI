@@ -1,0 +1,21 @@
+// settings.gradle for Health Connect Unity Plugin (Java version)
+
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "HealthConnectPlugin"
+include ':healthconnect'
+project(':healthconnect').projectDir = file('.')

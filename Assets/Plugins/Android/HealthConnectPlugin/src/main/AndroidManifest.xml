@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Health Connect Permissions -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    
+    <!-- Query for Health Connect app -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+        
+        <!-- Allow querying Health Connect intents -->
+        <intent>
+            <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+        </intent>
+    </queries>
+    
+    <application>
+        <!-- Health Connect Activity for permissions -->
+        <activity
+            android:name="androidx.health.connect.client.impl.platform.HealthConnectPermissionDelegate"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+        
+        <!-- Declare that this app accesses Health Connect data -->
+        <meta-data
+            android:name="health_connect_integration"
+            android:value="true" />
+    </application>
+    
+</manifest>

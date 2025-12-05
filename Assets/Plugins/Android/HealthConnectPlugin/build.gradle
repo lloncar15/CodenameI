@@ -1,0 +1,69 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace 'com.gimgim.codenamei.healthconnect'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 28
+        targetSdk 34
+
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        
+        // Required for java.time APIs on older Android versions
+        coreLibraryDesugaringEnabled true
+    }
+    
+    // Exclude Unity classes to avoid duplicates
+    packagingOptions {
+        exclude 'com/unity3d/**'
+        exclude 'bitter/jnibridge/**'
+        exclude 'com/google/androidgamesdk/**'
+    }
+}
+
+dependencies {
+    // Using a stable version that works with Unity's Gradle
+    implementation 'androidx.health.connect:connect-client:1.1.0-alpha07'
+    
+    // Guava for ListenableFuture support
+    implementation 'com.google.guava:guava:31.1-android'
+    
+    // AndroidX Core
+    implementation 'androidx.core:core:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    
+    // Annotations
+    implementation 'androidx.annotation:annotation:1.7.0'
+    
+    // Desugaring for java.time on older Android
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+    
+    // Unity classes are provided by Unity at runtime
+    compileOnly files('libs/unity-classes.jar')
+}
+
+// Task to copy AAR to a convenient location
+task copyAar(type: Copy) {
+    from 'build/outputs/aar/'
+    into '../../../'
+    include '*-release.aar'
+    rename { 'HealthConnectPlugin.aar' }
+}
+
+// Run copyAar after assembleRelease
+assembleRelease.finalizedBy copyAar
