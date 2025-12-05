@@ -16,9 +16,6 @@ namespace GimGim.StepTracking {
         [Tooltip("Automatically start tracking when initialized")]
         [SerializeField] private bool autoStartTracking = false;
         
-        [Tooltip("Enable verbose debug logging")]
-        [SerializeField] private bool enableDebugLogs = true;
-        
         #endregion
 
         #region Private Fields

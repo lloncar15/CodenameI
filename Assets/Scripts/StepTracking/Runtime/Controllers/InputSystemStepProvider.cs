@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Android;
 using UnityEngine.InputSystem;
 
 namespace GimGim.StepTracking {
@@ -13,13 +14,6 @@ namespace GimGim.StepTracking {
     /// - Android: ACTIVITY_RECOGNITION permission in AndroidManifest.xml
     /// </summary>
     public class InputSystemStepProvider : MonoBehaviour, IStepProvider {
-        #region Inspector Fields
-        
-        [Header("Debug")]
-        [SerializeField] private bool enableDebugLogs = true;
-        
-        #endregion
-        
         #region Private Fields
         
         private StepCounter _stepCounter;
@@ -185,8 +179,7 @@ namespace GimGim.StepTracking {
         #endregion
         
         #region Platform-Specific Authorization
-        
-        
+
 #if UNITY_ANDROID && !UNITY_EDITOR
         private void RequestAndroidPermission(Action<bool> callback) {
             const string permission = "android.permission.ACTIVITY_RECOGNITION";

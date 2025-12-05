@@ -144,7 +144,7 @@ namespace GimGim.StepTracking {
             LastActiveSource = source;
 
             int points = CalculatePoints(steps);
-            TotalStepsAllTime += points;
+            TotalPointsAwarded += points;
 
             Save();
             
