@@ -27,6 +27,19 @@ namespace GimGim.StepTracking.StepTracking {
         }
 
         #endregion
+        
+        #region Private Fields
+
+        private bool _isInitialized = false;
+        private bool _hasPermissions = false;
+        private Action<bool> _authorizationCallback;
+        private Action<StepData> _stepDataCallback;
+        
+// #if UNITY_ANDROID && !UNITY_EDITOR
+        private AndroidJavaClass _bridgeClass;
+// #endif
+
+        #endregion
 
         #region Events
 
@@ -91,19 +104,6 @@ namespace GimGim.StepTracking.StepTracking {
         public void StopRealTimeTracking() {
             // No-op
         }
-
-        #endregion
-
-        #region Private Fields
-
-        private bool _isInitialized = false;
-        private bool _hasPermissions = false;
-        private Action<bool> _authorizationCallback;
-        private Action<StepData> _stepDataCallback;
-        
-// #if UNITY_ANDROID && !UNITY_EDITOR
-        private AndroidJavaClass _bridgeClass;
-// #endif
 
         #endregion
 
@@ -377,7 +377,7 @@ namespace GimGim.StepTracking.StepTracking {
         }
 
         /// <summary>
-        /// Called when an error occurs
+        /// Called when an error occurs. If we expected callback for step data, send it with failed data.
         /// </summary>
         public void OnHealthConnectError(string jsonError) {
             Debug.LogError($"[HealthConnectProvider] OnHealthConnectError: {jsonError}");
