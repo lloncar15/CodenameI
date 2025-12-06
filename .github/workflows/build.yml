@@ -183,7 +183,7 @@ jobs:
         with:
           targetPlatform: Android
           buildName: CodenameI
-          androidAppBundle: false
+          androidExportType: androidPackage
           androidKeystoreName: # Add your keystore name if you have one
           androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
