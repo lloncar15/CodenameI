@@ -1,0 +1,41 @@
+# ============================================================================
+# Unity License Activation Workflow
+# ============================================================================
+# This workflow is used ONCE to generate a Unity license file for CI/CD.
+# After running this, you'll download the .alf file, activate it manually,
+# and then add the resulting .ulf file to your GitHub secrets.
+#
+# STEPS:
+# 1. Push this file to your repo
+# 2. Go to Actions tab in GitHub
+# 3. Select "Acquire Unity License" workflow
+# 4. Click "Run workflow"
+# 5. Download the .alf artifact
+# 6. Go to https://license.unity3d.com/manual
+# 7. Upload the .alf file and follow the steps
+# 8. Download the resulting .ulf file
+# 9. Add its contents to GitHub Secrets as UNITY_LICENSE
+# 10. Delete this workflow file (it's no longer needed)
+# ============================================================================
+
+name: Acquire Unity License 🔑
+
+on:
+  workflow_dispatch: {}  # Manual trigger only
+
+jobs:
+  activation:
+    name: Request activation file 🔐
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Request manual activation file
+        id: getManualLicenseFile
+        uses: game-ci/unity-request-activation-file@v2
+        
+      - name: Upload activation file as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity_Activation_File
+          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
+          retention-days: 5

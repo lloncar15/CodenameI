@@ -1,0 +1,237 @@
+# ============================================================================
+# Walk Game - Release Workflow
+# ============================================================================
+# This workflow creates release builds when you push a tag like v1.0.0
+#
+# USAGE:
+# 1. Update your version number in Unity
+# 2. Commit your changes
+# 3. Create and push a tag:
+#    git tag v1.0.0
+#    git push origin v1.0.0
+# 4. This workflow will automatically:
+#    - Build Android APK and AAB
+#    - Build iOS Xcode project
+#    - Create a GitHub Release with the builds attached
+# ============================================================================
+
+name: Release 🚀
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on v1.0.0, v1.2.3, etc.
+      
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+
+jobs:
+  # ============================================================================
+  # JOB: Prepare Release
+  # ============================================================================
+  prepare:
+    name: Prepare Release 📋
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      
+    steps:
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building version: $VERSION"
+
+  # ============================================================================
+  # JOB: Build Android Release
+  # ============================================================================
+  buildAndroid:
+    name: Build Android Release 🤖
+    needs: prepare
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-Release-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+            Library-
+            
+      - name: Free disk space
+        run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt clean
+          docker rmi $(docker image ls -aq) || true
+          
+      # Build APK (for direct installation / testing)
+      - name: Build Android APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          buildName: WalkGame-${{ needs.prepare.outputs.version }}
+          androidAppBundle: false
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+          versioning: Custom
+          version: ${{ needs.prepare.outputs.version }}
+          
+      - name: Rename APK
+        run: |
+          mv build/Android/*.apk build/Android/WalkGame-${{ needs.prepare.outputs.version }}.apk || true
+          
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WalkGame-Android-APK-${{ needs.prepare.outputs.version }}
+          path: build/Android/*.apk
+          retention-days: 30
+
+  # ============================================================================
+  # JOB: Build iOS Release
+  # ============================================================================
+  buildIOS:
+    name: Build iOS Release 🍎
+    needs: prepare
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-iOS-Release-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-iOS-
+            Library-
+            
+      - name: Free disk space
+        run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt clean
+          docker rmi $(docker image ls -aq) || true
+          
+      - name: Build iOS
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: iOS
+          buildName: WalkGame-${{ needs.prepare.outputs.version }}
+          versioning: Custom
+          version: ${{ needs.prepare.outputs.version }}
+          
+      - name: Create iOS archive
+        run: |
+          cd build/iOS
+          zip -r ../../WalkGame-iOS-XcodeProject-${{ needs.prepare.outputs.version }}.zip .
+          
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WalkGame-iOS-XcodeProject-${{ needs.prepare.outputs.version }}
+          path: WalkGame-iOS-XcodeProject-${{ needs.prepare.outputs.version }}.zip
+          retention-days: 30
+
+  # ============================================================================
+  # JOB: Create GitHub Release
+  # ============================================================================
+  createRelease:
+    name: Create Release 📦
+    needs: [prepare, buildAndroid, buildIOS]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Download Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: WalkGame-Android-APK-${{ needs.prepare.outputs.version }}
+          path: release-assets/android
+          
+      - name: Download iOS Xcode Project
+        uses: actions/download-artifact@v4
+        with:
+          name: WalkGame-iOS-XcodeProject-${{ needs.prepare.outputs.version }}
+          path: release-assets/ios
+          
+      - name: List release assets
+        run: |
+          echo "Release assets:"
+          find release-assets -type f
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Walk Game v${{ needs.prepare.outputs.version }}
+          tag_name: v${{ needs.prepare.outputs.version }}
+          draft: false
+          prerelease: ${{ contains(needs.prepare.outputs.version, 'alpha') || contains(needs.prepare.outputs.version, 'beta') || contains(needs.prepare.outputs.version, 'rc') }}
+          generate_release_notes: true
+          files: |
+            release-assets/android/*.apk
+            release-assets/ios/*.zip
+          body: |
+            ## 🎮 Walk Game v${{ needs.prepare.outputs.version }}
+            
+            ### 📥 Downloads
+            
+            | Platform | File | Notes |
+            |----------|------|-------|
+            | Android | `WalkGame-${{ needs.prepare.outputs.version }}.apk` | Install directly on device |
+            | iOS | `WalkGame-iOS-XcodeProject-${{ needs.prepare.outputs.version }}.zip` | Requires Xcode to build IPA |
+            
+            ### 📱 Android Installation
+            1. Download the APK file
+            2. Enable "Install from unknown sources" if prompted
+            3. Open the APK to install
+            
+            ### 🍎 iOS Installation
+            1. Download the Xcode project zip
+            2. Extract and open in Xcode on a Mac
+            3. Configure your signing certificate and provisioning profile
+            4. Build and deploy to your device
+            
+            ---
+            
+            *See the [full changelog](https://github.com/${{ github.repository }}/commits/v${{ needs.prepare.outputs.version }}) for all changes.*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

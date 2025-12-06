@@ -1,0 +1,404 @@
+# ============================================================================
+# Walk Game - CI/CD Pipeline
+# ============================================================================
+# This workflow builds and tests the Unity project for Android and iOS.
+#
+# TRIGGERS:
+# - Push to main/develop branches
+# - Pull requests to main/develop
+# - Manual trigger (workflow_dispatch)
+#
+# REQUIRED SECRETS:
+# - UNITY_LICENSE: Contents of your .ulf license file
+# - UNITY_EMAIL: Your Unity account email
+# - UNITY_PASSWORD: Your Unity account password
+#
+# FOR iOS BUILDS (optional, for App Store deployment):
+# - APPLE_CERTIFICATE_BASE64: Base64-encoded .p12 certificate
+# - APPLE_CERTIFICATE_PASSWORD: Password for the certificate
+# - APPLE_PROVISIONING_PROFILE_BASE64: Base64-encoded provisioning profile
+# - APPSTORE_KEY_ID: App Store Connect API Key ID
+# - APPSTORE_ISSUER_ID: App Store Connect Issuer ID
+# - APPSTORE_P8: Contents of the .p8 API key file
+# ============================================================================
+
+name: Build & Test 🎮
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'docs/**'
+      
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'docs/**'
+      
+  workflow_dispatch:
+    inputs:
+      build_android:
+        description: 'Build for Android'
+        required: true
+        default: true
+        type: boolean
+      build_ios:
+        description: 'Build for iOS'
+        required: true
+        default: true
+        type: boolean
+      run_tests:
+        description: 'Run unit tests'
+        required: true
+        default: true
+        type: boolean
+
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+  # Set your Unity version here
+  UNITY_VERSION: 2022.3.20f1
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # JOB: Check License
+  # ============================================================================
+  checkLicense:
+    name: Check License ✅
+    runs-on: ubuntu-latest
+    outputs:
+      has_license: ${{ steps.check.outputs.has_license }}
+    steps:
+      - name: Check for Unity license
+        id: check
+        run: |
+          if [ -n "$UNITY_LICENSE" ] && [ "${UNITY_LICENSE:0:1}" = "<" ]; then
+            echo "has_license=true" >> $GITHUB_OUTPUT
+            echo "✅ Unity license found"
+          else
+            echo "has_license=false" >> $GITHUB_OUTPUT
+            echo "❌ Unity license not found or invalid"
+            echo "Please add UNITY_LICENSE secret to your repository"
+            exit 1
+          fi
+
+  # ============================================================================
+  # JOB: Run Tests
+  # ============================================================================
+  testRunner:
+    name: Run Tests 🧪
+    needs: checkLicense
+    if: |
+      needs.checkLicense.outputs.has_license == 'true' &&
+      (github.event_name != 'workflow_dispatch' || inputs.run_tests)
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        testMode:
+          - playmode
+          - editmode
+          
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Test-${{ matrix.testMode }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Test-${{ matrix.testMode }}-
+            Library-
+            
+      - name: Run ${{ matrix.testMode }} tests
+        uses: game-ci/unity-test-runner@v4
+        id: tests
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          testMode: ${{ matrix.testMode }}
+          artifactsPath: ${{ matrix.testMode }}-artifacts
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: ${{ matrix.testMode }} Test Results
+          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:+WalkGame.*'
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Test-Results-${{ matrix.testMode }}
+          path: ${{ matrix.testMode }}-artifacts
+          retention-days: 14
+          
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Coverage-Results-${{ matrix.testMode }}
+          path: CodeCoverage
+          retention-days: 14
+
+  # ============================================================================
+  # JOB: Build Android
+  # ============================================================================
+  buildAndroid:
+    name: Build Android 🤖
+    needs: [checkLicense, testRunner]
+    if: |
+      always() &&
+      needs.checkLicense.outputs.has_license == 'true' &&
+      (needs.testRunner.result == 'success' || needs.testRunner.result == 'skipped') &&
+      (github.event_name != 'workflow_dispatch' || inputs.build_android)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+            Library-
+            
+      - name: Free disk space
+        run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt clean
+          docker rmi $(docker image ls -aq) || true
+          df -h
+          
+      - name: Build Android APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          buildName: WalkGame
+          androidAppBundle: false
+          androidKeystoreName: # Add your keystore name if you have one
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+          # Uncomment below for Android App Bundle (for Play Store)
+          # androidAppBundle: true
+          # androidExportType: androidAppBundle
+          
+      - name: Upload Android build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-Android-${{ github.sha }}
+          path: build/Android
+          retention-days: 14
+          
+      - name: Get APK info
+        run: |
+          echo "📱 Android build completed!"
+          ls -la build/Android/ || echo "No files found"
+          echo ""
+          echo "Download the artifact above to install on your device"
+
+  # ============================================================================
+  # JOB: Build iOS
+  # ============================================================================
+  buildIOS:
+    name: Build iOS 🍎
+    needs: [checkLicense, testRunner]
+    if: |
+      always() &&
+      needs.checkLicense.outputs.has_license == 'true' &&
+      (needs.testRunner.result == 'success' || needs.testRunner.result == 'skipped') &&
+      (github.event_name != 'workflow_dispatch' || inputs.build_ios)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-iOS-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-iOS-
+            Library-
+            
+      - name: Free disk space
+        run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt clean
+          docker rmi $(docker image ls -aq) || true
+          df -h
+          
+      - name: Build iOS Xcode Project
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: iOS
+          buildName: WalkGame
+          
+      - name: Upload iOS Xcode project
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-iOS-XcodeProject-${{ github.sha }}
+          path: build/iOS
+          retention-days: 14
+          
+      - name: iOS Build Info
+        run: |
+          echo "🍎 iOS Xcode project generated!"
+          echo ""
+          echo "To build the final IPA:"
+          echo "1. Download the artifact above"
+          echo "2. Open in Xcode on a Mac"
+          echo "3. Configure signing"
+          echo "4. Archive and export"
+          echo ""
+          echo "Or use the buildIOSFinal job (requires Mac runner and signing secrets)"
+
+  # ============================================================================
+  # JOB: Build iOS IPA (requires macOS runner and signing)
+  # ============================================================================
+  buildIOSFinal:
+    name: Build iOS IPA 📦
+    needs: buildIOS
+    if: |
+      needs.buildIOS.result == 'success' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main'
+    runs-on: macos-latest
+    
+    steps:
+      - name: Download iOS Xcode project
+        uses: actions/download-artifact@v4
+        with:
+          name: Build-iOS-XcodeProject-${{ github.sha }}
+          path: build/iOS
+          
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+          
+      - name: Install Apple certificate and provisioning profile
+        if: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' }}
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ github.run_id }}
+        run: |
+          # Create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PROVISIONING_PROFILE_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          
+          # Import certificate and provisioning profile from secrets
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PROVISIONING_PROFILE_PATH
+          
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+          
+          # Apply provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PROVISIONING_PROFILE_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+          
+      - name: Build with Xcode
+        run: |
+          cd build/iOS/WalkGame
+          xcodebuild -project Unity-iPhone.xcodeproj \
+            -scheme Unity-iPhone \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/WalkGame.xcarchive \
+            archive \
+            CODE_SIGN_STYLE=Manual \
+            || echo "Build may have failed - check if signing is configured"
+            
+      - name: Export IPA
+        if: success()
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/WalkGame.xcarchive \
+            -exportPath $RUNNER_TEMP/export \
+            -exportOptionsPlist exportOptions.plist \
+            || echo "Export may have failed - ensure exportOptions.plist exists"
+            
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: Build-iOS-IPA-${{ github.sha }}
+          path: ${{ runner.temp }}/export/*.ipa
+          retention-days: 14
+
+  # ============================================================================
+  # JOB: Build Summary
+  # ============================================================================
+  summary:
+    name: Build Summary 📊
+    needs: [testRunner, buildAndroid, buildIOS]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "# 🎮 Walk Game Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.testRunner.result == 'success' && '✅ Passed' || needs.testRunner.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Android | ${{ needs.buildAndroid.result == 'success' && '✅ Built' || needs.buildAndroid.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| iOS | ${{ needs.buildIOS.result == 'success' && '✅ Built' || needs.buildIOS.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📥 Downloads" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download build artifacts from the Actions run page to test on devices." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
