@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace GimGim.StepTracking.StepTracking {
@@ -9,7 +10,7 @@ namespace GimGim.StepTracking.StepTracking {
     public class HealthKitProvider : MonoBehaviour, IStepProvider {
         #region Native Plugin Imports
         
-#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR 
         [DllImport("__Internal")]
         private static extern int HealthKit_IsAvailable();
         
@@ -90,7 +91,7 @@ namespace GimGim.StepTracking.StepTracking {
         
         public bool IsAvailable {
             get {
-            #if UNITY_IOS && !UNITY_EDITOR
+            #if UNITY_IOS && !UNITY_EDITOR 
                 return HealthKit_IsAvailable() == 1;
             #else
                 return false;
@@ -100,7 +101,7 @@ namespace GimGim.StepTracking.StepTracking {
         
         public bool IsAuthorized {
             get {
-            #if UNITY_IOS && !UNITY_EDITOR
+            #if UNITY_IOS && !UNITY_EDITOR 
                 return HealthKit_IsAuthorized() == 1;
             #else
                 return false;
@@ -164,7 +165,7 @@ namespace GimGim.StepTracking.StepTracking {
         /// Check if HealthKit is available on this device
         /// </summary>
         public bool CheckAvailability() {
-        #if UNITY_IOS && !UNITY_EDITOR
+        #if UNITY_IOS && !UNITY_EDITOR 
             bool available = HealthKit_IsAvailable() == 1;
             Debug.Log($"[HealthKitProvider] Availability: {available}");
             return available;
@@ -179,7 +180,7 @@ namespace GimGim.StepTracking.StepTracking {
         /// Returns: 1 = authorized, 0 = denied, -1 = not determined
         /// </summary>
         public int CheckAuthorizationStatus() {
-        #if UNITY_IOS && !UNITY_EDITOR
+        #if UNITY_IOS && !UNITY_EDITOR 
             return HealthKit_IsAuthorized();
         #else
             return -1;
@@ -190,7 +191,7 @@ namespace GimGim.StepTracking.StepTracking {
         /// Request HealthKit permissions
         /// </summary>
         public void RequestPermissions() {
-        #if UNITY_IOS && !UNITY_EDITOR
+        #if UNITY_IOS && !UNITY_EDITOR 
             Debug.Log("[HealthKitProvider] Requesting permissions...");
             HealthKit_RequestAuthorization();
         #else
@@ -203,7 +204,7 @@ namespace GimGim.StepTracking.StepTracking {
         /// Query steps since a given timestamp (milliseconds since epoch)
         /// </summary>
         public void QueryStepsSince(long timestampMillis) {
-        #if UNITY_IOS && !UNITY_EDITOR
+        #if UNITY_IOS && !UNITY_EDITOR 
             Debug.Log($"[HealthKitProvider] Querying steps since {timestampMillis}");
             HealthKit_GetStepsSince(timestampMillis);
         #else
@@ -215,7 +216,7 @@ namespace GimGim.StepTracking.StepTracking {
         /// Query steps for a date range
         /// </summary>
         public void QueryStepsForRange(DateTime start, DateTime end) {
-        #if UNITY_IOS && !UNITY_EDITOR
+        #if UNITY_IOS && !UNITY_EDITOR 
             long startMillis = new DateTimeOffset(start.ToUniversalTime()).ToUnixTimeMilliseconds();
             long endMillis = new DateTimeOffset(end.ToUniversalTime()).ToUnixTimeMilliseconds();
             
@@ -230,7 +231,7 @@ namespace GimGim.StepTracking.StepTracking {
         /// Query steps for today
         /// </summary>
         public void QueryStepsToday() {
-        #if UNITY_IOS && !UNITY_EDITOR
+        #if UNITY_IOS && !UNITY_EDITOR 
             Debug.Log("[HealthKitProvider] Querying today's steps");
             HealthKit_GetStepsToday();
         #else
@@ -242,7 +243,7 @@ namespace GimGim.StepTracking.StepTracking {
         /// Open the iOS Health app
         /// </summary>
         public void OpenHealthApp() {
-        #if UNITY_IOS && !UNITY_EDITOR
+        #if UNITY_IOS && !UNITY_EDITOR 
             HealthKit_OpenHealthApp();
         #else
             Debug.Log("[HealthKitProvider] Cannot open Health app in editor");
