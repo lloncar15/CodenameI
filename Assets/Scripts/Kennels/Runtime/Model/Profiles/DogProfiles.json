@@ -1,0 +1,30 @@
+[
+  {
+    "profileId": 0,
+    "name": "Chihuahua",
+    "description": "The world's smallest dog breed has the largest brain-to-body ratio of any canine, making them surprisingly clever and strong-willed. Named after the Mexican state where they were discovered, these tiny dogs can live up to 20 years and often develop fierce loyalty to a single person.",
+    "heightRange": "15-23 cm",
+    "weightRange": "1.5-3 kg"
+  },
+  {
+    "profileId": 1,
+    "name": "Shih Tzu",
+    "description": "This ancient Chinese lap dog was bred exclusively for royalty and has a flowing double coat that requires daily grooming. Despite their small size, they're surprisingly sturdy and we originally bred to resemble miniature lions.",
+    "heightRange": "20-28 cm",
+    "weightRange": "4-7 kg"
+  },
+  {
+    "profileId": 2,
+    "name": "Shiba Inu",
+    "description": "Japan's oldest native dog breed is famous for the 'Shiba scream', a high pitched vocalization they make when unhappy or excited. These fox-like dogs are exceptionally clean and often groom themselves like cats.",
+    "heightRange": "35-43 cm",
+    "weightRange": "8-11 kg"
+  },
+  {
+    "profileId": 3,
+    "name": "Border Collie",
+    "description": "Widely considered the world's most intelligent dog breed, Border Collies can learn new commands in under five seconds and follow them 95% of the time. Their intense herding instinct means they'll try to herd anything that moves, including children, cards and even shadows.",
+    "heightRange": "46-56 cm",
+    "weightRange": "12-20 kg"
+  }
+]
