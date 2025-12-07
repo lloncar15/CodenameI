@@ -2,10 +2,11 @@
     "name": "com.gimgim.steptracking.editor",
     "rootNamespace": "GimGim.StepTracking.Editor",
     "references": [
-        "GUID:d71c13b7689cfb04ba9671daad819ad8",
-        "GUID:343deaaf83e0cee4ca978e7df0b80d21"
+        "GUID:d71c13b7689cfb04ba9671daad819ad8"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+      "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
