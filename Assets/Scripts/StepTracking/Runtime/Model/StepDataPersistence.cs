@@ -59,7 +59,7 @@ namespace GimGim.StepTracking {
         /// </summary>
         public void Save() {
             try {
-                SaveDataContainer saveData = new SaveDataContainer {
+                SaveDataContainer saveData = new() {
                     lastHealthSyncTicks = LastHealthSyncTimestamp.Ticks,
                     totalPointsAwarded = TotalPointsAwarded,
                     pendingPedometerSteps = PendingPedometerSteps,
