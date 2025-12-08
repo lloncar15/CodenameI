@@ -64,12 +64,11 @@ namespace GimGim.StepTracking
                 _clearDataButton.onClick.AddListener(OnClearDataClicked);
             }
             
-            // Subscribe to events
-            if (StepDataManager.Instance != null)
+            if (StepController.Instance != null)
             {
-                StepDataManager.Instance.OnStepsDetected += OnStepsDetected;
-                StepDataManager.Instance.OnPointsAwarded += OnPointsAwarded;
-                StepDataManager.Instance.OnInitialized += OnManagerInitialized;
+                StepController.Instance.OnStepsDetected += OnStepsDetected;
+                StepController.Instance.OnPointsAwarded += OnPointsAwarded;
+                StepController.Instance.OnInitialized += OnManagerInitialized;
             }
             
             // Initial UI update
@@ -78,12 +77,11 @@ namespace GimGim.StepTracking
         
         private void OnDestroy()
         {
-            // Unsubscribe from events
-            if (StepDataManager.Instance != null)
+            if (StepController.Instance != null)
             {
-                StepDataManager.Instance.OnStepsDetected -= OnStepsDetected;
-                StepDataManager.Instance.OnPointsAwarded -= OnPointsAwarded;
-                StepDataManager.Instance.OnInitialized -= OnManagerInitialized;
+                StepController.Instance.OnStepsDetected -= OnStepsDetected;
+                StepController.Instance.OnPointsAwarded -= OnPointsAwarded;
+                StepController.Instance.OnInitialized -= OnManagerInitialized;
             }
         }
         
@@ -103,7 +101,7 @@ namespace GimGim.StepTracking
         
         private void UpdateUI()
         {
-            var manager = StepDataManager.Instance;
+            var manager = StepController.Instance;
             
             if (manager == null)
             {
@@ -140,7 +138,7 @@ namespace GimGim.StepTracking
             // Points
             if (_pointsText != null)
             {
-                _pointsText.text = $"Points: {manager.TotalPoints:N0}";
+                // _pointsText.text = $"Points: {manager.TotalPoints:N0}";
             }
             
             // Debug info
@@ -171,7 +169,7 @@ namespace GimGim.StepTracking
         
         private void OnToggleTrackingClicked()
         {
-            var manager = StepDataManager.Instance;
+            var manager = StepController.Instance;
             if (manager == null) return;
             
             manager.ToggleTracking();
@@ -180,7 +178,7 @@ namespace GimGim.StepTracking
         
         private void OnAddTestStepsClicked()
         {
-            var manager = StepDataManager.Instance;
+            var manager = StepController.Instance;
             if (manager == null) return;
             
             int points = manager.AddStepsManually(_testStepsToAdd);
@@ -190,7 +188,7 @@ namespace GimGim.StepTracking
         
         private void OnClearDataClicked()
         {
-            var manager = StepDataManager.Instance;
+            var manager = StepController.Instance;
             if (manager == null) return;
             
             manager.ClearAllData();

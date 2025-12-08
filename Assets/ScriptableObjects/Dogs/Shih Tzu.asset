@@ -12,8 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a71ac49be5b5a22498b7d3084df66b70, type: 3}
   m_Name: Shih Tzu
   m_EditorClassIdentifier: 
-  profileId: 0
-  dogName: 
-  description: 
-  heightRange: 
-  weightRange: 
+  profileId: 1
+  dogName: Shih Tzu
+  description: This ancient Chinese lap dog was bred exclusively for royalty and
+    has a flowing double coat that requires daily grooming. Despite their small size,
+    they're surprisingly sturdy and we originally bred to resemble miniature lions.
+  heightRange: 20-28 cm
+  weightRange: 4-7 kg
+  sprite: {fileID: 21300000, guid: ee3bd428a4c914d7499b874ed0fc8201, type: 3}
+  spriteThumbPositions: {x: 0, y: 0}

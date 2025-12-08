@@ -13,7 +13,12 @@ MonoBehaviour:
   m_Name: Chihuahua
   m_EditorClassIdentifier: 
   profileId: 0
-  dogName: 
-  description: 
-  heightRange: 
-  weightRange: 
+  dogName: Chihuahua
+  description: The world's smallest dog breed has the largest brain-to-body ratio
+    of any canine, making them surprisingly clever and strong-willed. Named after
+    the Mexican state where they were discovered, these tiny dogs can live up to
+    20 years and often develop fierce loyalty to a single person.
+  heightRange: 15-23 cm
+  weightRange: 1.5-3 kg
+  sprite: {fileID: 21300000, guid: 9684abde5bfcd41fdb9cbd506f685fb0, type: 3}
+  spriteThumbPositions: {x: 0, y: 0}
