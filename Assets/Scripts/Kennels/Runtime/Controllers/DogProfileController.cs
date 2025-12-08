@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -7,7 +8,7 @@ namespace GimGim.Kennels {
         #region Singleton
 
         private static DogProfileController _instance;
-        
+
         public static DogProfileController Instance {
             get {
                 if (_instance == null) {
@@ -19,6 +20,7 @@ namespace GimGim.Kennels {
                         DontDestroyOnLoad(go);
                     }
                 }
+
                 return _instance;
             }
         }
@@ -26,25 +28,25 @@ namespace GimGim.Kennels {
         #endregion
 
         #region Profiles & Getters
-        
-        private readonly Dictionary<int, DogProfile> _profiles = new();
 
-        public Dictionary<int, DogProfile> GetDogProfiles() {
-            return _profiles;
+        public List<DogProfile> profiles;
+
+        public List<DogProfile> GetDogProfiles() {
+            return profiles;
         }
-        
+
         public DogProfile GetDogProfileById(int profileId) {
-            return _profiles[profileId];
+            return profiles.FirstOrDefault(profile => profile.profileId == profileId);
         }
 
         public DogProfile GetDogProfileByName(string dogName) {
-            return _profiles.Where(kvp => kvp.Value.name == dogName).Select(kvp => kvp.Value).FirstOrDefault();
+            return profiles.FirstOrDefault(profile => profile.name == dogName);
         }
 
         #endregion
 
         #region UnityLifecycle
-        
+
         private void Awake() {
             if (_instance != null && _instance != this) {
                 Destroy(gameObject);
@@ -53,19 +55,6 @@ namespace GimGim.Kennels {
 
             _instance = this;
             DontDestroyOnLoad(gameObject);
-
-            Initialize();
-        } 
-
-        #endregion
-
-        #region Initialization
-
-        /// <summary>
-        /// Reads the profiles json and populates the profiles' dictionary.
-        /// </summary>
-        private void Initialize() {
-             
         }
 
         #endregion
