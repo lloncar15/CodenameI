@@ -84,8 +84,8 @@ namespace GimGim.StepTracking {
         }
         
         
-        public void GetStepsSince(DateTime since, Action<StepData> callback) {
-            callback?.Invoke(StepData.Failed(
+        public void GetStepsSince(DateTime since, Action<StepQueryData> callback) {
+            callback?.Invoke(StepQueryData.Failed(
                 "Historical step data not supported by Input System. Use real-time tracking instead.",
                 Source
             ));

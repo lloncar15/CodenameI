@@ -7,7 +7,7 @@ namespace GimGim.StepTracking {
     /// Serializable data container for step tracking data
     /// </summary>
     [Serializable]
-    public class StepSaveData {
+    public class StepsData {
         public long lastHealthSyncTicks = DateTime.UtcNow.AddDays(-1).Ticks;
         public int pendingPedometerSteps = 0;
         public int lastActiveSource = 0;
@@ -22,14 +22,14 @@ namespace GimGim.StepTracking {
     /// Handles serialization and provides typed access to step data.
     /// </summary>
     [Serializable]
-    public class StepPersistentData : PersistentDataBase<StepSaveData> {
+    public class StepPersistentData : PersistentDataBase<StepsData> {
         #region Properties
 
         /// <summary>
         /// Last time we synced steps from a health API
         /// </summary>
         public DateTime LastHealthSyncTimestamp {
-            get => new DateTime(Data.lastHealthSyncTicks);
+            get => new(Data.lastHealthSyncTicks);
             set {
                 Data.lastHealthSyncTicks = value.Ticks;
                 MarkDirty();
@@ -84,7 +84,7 @@ namespace GimGim.StepTracking {
         /// The date of the last step count (for daily reset)
         /// </summary>
         public DateTime LastStepDate {
-            get => new DateTime(Data.lastStepDateTicks);
+            get => new(Data.lastStepDateTicks);
             set {
                 Data.lastStepDateTicks = value.Ticks;
                 MarkDirty();

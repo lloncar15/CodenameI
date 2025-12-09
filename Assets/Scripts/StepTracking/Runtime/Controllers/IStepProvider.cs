@@ -42,7 +42,7 @@ namespace GimGim.StepTracking {
         /// </summary>
         /// <param name="since">Start time for the query</param>
         /// <param name="callback">Called with the step data result</param>
-        void GetStepsSince(DateTime since, Action<StepData> callback);
+        void GetStepsSince(DateTime since, Action<StepQueryData> callback);
 
         /// <summary>
         /// Event fired when steps are detected in real-time

@@ -5,7 +5,7 @@ namespace GimGim.StepTracking {
     /// Data container for step query results
     /// </summary>
     [Serializable]
-    public struct StepData {
+    public struct StepQueryData {
         public bool success;
         public int steps;
         public string error;
@@ -13,8 +13,8 @@ namespace GimGim.StepTracking {
         public DateTime ToDate;
         public StepSource source;
 
-        public static StepData Failed(string errorMessage, StepSource fromSource = StepSource.None) {
-            return new StepData {
+        public static StepQueryData Failed(string errorMessage, StepSource fromSource = StepSource.None) {
+            return new StepQueryData {
                 success = false,
                 steps = 0,
                 error = errorMessage,
@@ -24,8 +24,8 @@ namespace GimGim.StepTracking {
             };
         }
 
-        public static StepData Succeeded(int steps, DateTime from, DateTime to, StepSource fromSource) {
-            return new StepData {
+        public static StepQueryData Succeeded(int steps, DateTime from, DateTime to, StepSource fromSource) {
+            return new StepQueryData {
                 success = true,
                 steps = steps,
                 error = string.Empty,

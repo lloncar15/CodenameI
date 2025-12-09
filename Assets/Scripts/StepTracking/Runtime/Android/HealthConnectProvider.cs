@@ -33,7 +33,7 @@ namespace GimGim.StepTracking.StepTracking {
         private bool _isInitialized = false;
         private bool _hasPermissions = false;
         private Action<bool> _authorizationCallback;
-        private Action<StepData> _stepDataCallback;
+        private Action<StepQueryData> _stepDataCallback;
         
 // #if UNITY_ANDROID && !UNITY_EDITOR
         private AndroidJavaClass _bridgeClass;
@@ -91,7 +91,7 @@ namespace GimGim.StepTracking.StepTracking {
             RequestPermissions();
         }
 
-        public void GetStepsSince(DateTime since, Action<StepData> callback) {
+        public void GetStepsSince(DateTime since, Action<StepQueryData> callback) {
             _stepDataCallback = callback;
             long sinceMillis = new DateTimeOffset(since.ToUniversalTime()).ToUnixTimeMilliseconds();
             QueryStepsSince(sinceMillis);
@@ -339,7 +339,7 @@ namespace GimGim.StepTracking.StepTracking {
         }
 
         /// <summary>
-        /// Called when steps are received. Converts the data to StepData for IStepProvider callback
+        /// Called when steps are received. Converts the data to StepQueryData for IStepProvider callback
         /// and fires the real-time event for compatibility
         /// </summary>
         public void OnStepsReceived(string jsonResult) {
@@ -352,13 +352,13 @@ namespace GimGim.StepTracking.StepTracking {
                 if (_stepDataCallback == null || !result.success) 
                     return;
                 
-                StepData stepData = StepData.Succeeded(
+                StepQueryData stepQueryData = StepQueryData.Succeeded(
                     (int)result.steps,
                     DateTimeOffset.FromUnixTimeMilliseconds(result.startTime).DateTime,
                     DateTimeOffset.FromUnixTimeMilliseconds(result.endTime).DateTime,
                     StepSource.HealthConnect);
                     
-                _stepDataCallback.Invoke(stepData);
+                _stepDataCallback.Invoke(stepQueryData);
                 _stepDataCallback = null;
                     
                 OnStepsUpdated?.Invoke((int)result.steps);
@@ -389,11 +389,11 @@ namespace GimGim.StepTracking.StepTracking {
                 if (_stepDataCallback == null) 
                     return;
                 
-                StepData stepData = StepData.Failed(
+                StepQueryData stepQueryData = StepQueryData.Failed(
                     $"{error.errorCode}: {error.errorMessage}",
                     StepSource.HealthConnect);
                 
-                _stepDataCallback.Invoke(stepData);
+                _stepDataCallback.Invoke(stepQueryData);
                 _stepDataCallback = null;
             }
             catch (Exception e) {
