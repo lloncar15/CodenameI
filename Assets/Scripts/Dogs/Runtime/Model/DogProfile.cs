@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace GimGim.Kennels {
+namespace GimGim.Dogs {
     [CreateAssetMenu(fileName = "Dog", menuName = "GimGim/Kennel/Dog")]
     public class DogProfile : ScriptableObject {
         [Header("Ids")]

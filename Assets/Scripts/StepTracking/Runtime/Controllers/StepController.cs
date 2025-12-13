@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using GimGim.DailyReset;
 using UnityEngine;
 
 namespace GimGim.StepTracking {
@@ -108,6 +109,8 @@ namespace GimGim.StepTracking {
         }
 
         private void Start() {
+            DailyResetManager.Instance?.RegisterResetHandler(0, OnDailyReset);
+            
             Initialize(success => {
                 if (success && autoStartTracking) {
                     StartTracking();
@@ -117,6 +120,8 @@ namespace GimGim.StepTracking {
 
         private void OnDestroy() {
             if (Instance == this) {
+                DailyResetManager.Instance?.UnregisterResetHandler(0);
+                
                 StopTracking();
                 Instance = null;
             }
@@ -275,11 +280,8 @@ namespace GimGim.StepTracking {
             if (steps <= 0)
                 return 0;
 
-            _persistence.CheckDailyReset();
-
             _persistence.TotalStepsAllTime += steps;
             _persistence.StepsToday += steps;
-            _persistence.LastStepDate = DateTime.UtcNow.Date;
             _persistence.LastActiveSource = source;
 
             // TODO: move this into the points controller
@@ -381,6 +383,16 @@ namespace GimGim.StepTracking {
             Debug.Log("[StepController] All data cleared");
         }
 
+        #endregion
+        
+        #region Daily Reset
+
+        private void OnDailyReset() {
+            Debug.Log("[StepDataManager] Handling daily reset");
+            _persistence?.ResetDailyData();
+            _inputSystemProvider?.ResetSessionSteps();
+        }
+        
         #endregion
 
         #region Debug / Testing

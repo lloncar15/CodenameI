@@ -21,7 +21,7 @@ namespace GimGim.Persistence {
         
         #region Static Fields
 
-        private static readonly List<IPersistentData> _pendingRegistrations = new();
+        private static readonly List<IPersistentData> PendingRegistrations = new();
         private static bool _isInitialized;
 
         #endregion
@@ -65,10 +65,10 @@ namespace GimGim.Persistence {
             DontDestroyOnLoad(go);
             _isInitialized = true;
             
-            foreach (IPersistentData data in _pendingRegistrations) {
+            foreach (IPersistentData data in PendingRegistrations) {
                 _instance._registeredData.Add(data);
             }
-            _pendingRegistrations.Clear();
+            PendingRegistrations.Clear();
             _instance.LoadAll();
             
             Debug.Log("[PersistenceManager] Initialized");
@@ -100,8 +100,8 @@ namespace GimGim.Persistence {
                 Debug.Log($"[PersistenceManager] Registered: {data.Key}");
             }
             else {
-                if (!_pendingRegistrations.Contains(data)) {
-                    _pendingRegistrations.Add(data);
+                if (!PendingRegistrations.Contains(data)) {
+                    PendingRegistrations.Add(data);
                 }
             }
         }
@@ -119,7 +119,7 @@ namespace GimGim.Persistence {
                 Debug.Log($"[PersistenceManager] Unregistered: {data.Key}");
             }
             else {
-                _pendingRegistrations.Remove(data);
+                PendingRegistrations.Remove(data);
             }
         }
 

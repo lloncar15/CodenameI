@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace GimGim.Kennels {
+namespace GimGim.Dogs {
     public class DogProfileController : MonoBehaviour {
         #region Singleton
 

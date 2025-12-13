@@ -13,7 +13,6 @@ namespace GimGim.StepTracking {
         public int lastActiveSource = 0;
         public long totalStepsAllTime = 0;
         public int stepsToday = 0;
-        public long lastStepDateTicks = DateTime.MinValue.Ticks;
         public int version = 1;
     }
     
@@ -80,38 +79,16 @@ namespace GimGim.StepTracking {
             }
         }
 
-        /// <summary>
-        /// The date of the last step count (for daily reset)
-        /// </summary>
-        public DateTime LastStepDate {
-            get => new(Data.lastStepDateTicks);
-            set {
-                Data.lastStepDateTicks = value.Ticks;
-                MarkDirty();
-            }
-        }
-
         #endregion
         
-        #region Overrides
-        
-        protected override void OnLoaded() {
-            CheckDailyReset();
-        }
-        
-        /// <summary>
-        /// Check if we've crossed into a new day and reset daily counters
-        /// </summary>
-        public void CheckDailyReset() {
-            DateTime today = DateTime.UtcNow.Date;
+        #region Daily Reset
 
-            if (LastStepDate.Date >= today)
-                return;
-
-            Debug.Log($"[StepPersistentData] New day detected. Yesterday's steps: {StepsToday}");
-            Data.stepsToday = 0;
-            Data.lastStepDateTicks = today.Ticks;
-            MarkDirty();
+        public void ResetDailyData() {
+            Debug.Log($"[StepDataPersistence] Resetting daily data. Previous steps today: {StepsToday}");
+            
+            StepsToday = 0;
+            
+            Save();
         }
 
         #endregion
