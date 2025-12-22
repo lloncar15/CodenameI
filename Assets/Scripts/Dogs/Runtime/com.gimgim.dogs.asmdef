@@ -1,7 +1,9 @@
 {
     "name": "com.gimgim.dogs",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:e3b8e6e9a84f8e34c8691217fe1b175c"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

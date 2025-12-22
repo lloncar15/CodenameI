@@ -13,6 +13,10 @@ namespace GimGim.Dogs {
         public string heightRange;
         public string weightRange;
         
+        [Header("Rarity")]
+        [Tooltip("Higher value = more common. Used as weight in random selection.")]
+        public int rarity;
+        
         [Header("Sprites")]
         public Sprite sprite;
         [Tooltip("Offset positions for sprites shown in thumbnails across the UI.")]
